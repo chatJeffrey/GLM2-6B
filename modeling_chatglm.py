@@ -904,8 +904,9 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         if position_ids is None:
             position_ids = self.get_position_ids(input_ids, device=input_ids.device)
         if not is_first_forward:
-            position_ids = position_ids[..., -1:]
-            input_ids = input_ids[:, -1:]
+            if self.config.use_cache:
+                position_ids = position_ids[..., -1:]
+                input_ids = input_ids[:, -1:]
         return {
             "input_ids": input_ids,
             "past_key_values": past_key_values,
