@@ -897,6 +897,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             past_key_values: Optional[torch.Tensor] = None,
             attention_mask: Optional[torch.Tensor] = None,
             position_ids: Optional[torch.Tensor] = None,
+            use_cache: Optional[bool] = None,
             is_first_forward: bool = True,
             **kwargs
     ) -> dict:
@@ -904,7 +905,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         if position_ids is None:
             position_ids = self.get_position_ids(input_ids, device=input_ids.device)
         if not is_first_forward:
-            if self.config.use_cache:
+            if past_key_values is not None:
                 position_ids = position_ids[..., -1:]
                 input_ids = input_ids[:, -1:]
         return {
@@ -912,7 +913,8 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             "past_key_values": past_key_values,
             "position_ids": position_ids,
             "attention_mask": attention_mask,
-            "return_last_logit": True
+            "return_last_logit": True,
+            "use_cache": use_cache
         }
 
     def forward(
@@ -1089,6 +1091,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             generation_config = self.generation_config
         generation_config = copy.deepcopy(generation_config)
         model_kwargs = generation_config.update(**kwargs)
+        model_kwargs["use_cache"] = generation_config.use_cache
         bos_token_id, eos_token_id = generation_config.bos_token_id, generation_config.eos_token_id
 
         if isinstance(eos_token_id, int):
